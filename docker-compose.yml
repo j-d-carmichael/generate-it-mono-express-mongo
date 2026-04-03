@@ -1,0 +1,27 @@
+{%- set serviceName =  _.kebabCase(package.name) | replace(r/[-_]*swagger$/, "") -%}
+version: "3"
+
+services:
+  {{ serviceName }}:
+    image: "${IMAGE_PREFIX}{{ serviceName }}-image:${IMAGE_TAG:-latest}"
+    build:
+      dockerfile: Dockerfile
+      context: .
+    env_file:
+      - .env
+    volumes:
+      - ./global.d.ts:/code/global.d.ts
+      - ./server.ts:/code/server.ts
+      - ./tsconfig.json:/code/tsconfig.json
+      - ./src:/code/src/
+    ports:
+      - "8080:8000"
+    # networks:
+    #   - some-external-network
+    working_dir: /code
+    command: watch
+
+# networks:
+#   some-external-network:
+#     external:
+#       name: some-external-network

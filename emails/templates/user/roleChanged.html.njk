@@ -1,0 +1,23 @@
+{% extends "_layout/layout1.html.njk" %}
+
+{% block subject %}Your Role Has Been Updated{% endblock %}
+
+{% block message %}
+  <tr class="content">
+    <td>
+      <table width="100%" class="pb-md">
+        <h1 class="title mb-lg" style="text-align: center;">Role Update</h1>
+
+        <p>Hi {{ firstName }},</p>
+
+        <p>Your role in has been updated.</p>
+
+        <p>Your new role is: <span class="bold highlight">{{ newRole }}</span></p>
+
+        <p>This change may affect your access to certain features and apps. If you have any questions about your new permissions, please contact your Weave administrator.</p>
+      </table>
+    </td>
+  </tr>
+
+  {% include "_layout/footer/immutableFooter.html.njk" %}
+{% endblock %}

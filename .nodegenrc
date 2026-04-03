@@ -1,0 +1,20 @@
+{
+  "nodegenDir": "src/http",
+  "nodegenMockDir": "src/domains/__mocks__",
+  "nodegenType": "server",
+  "segmentFirstGrouping": 2,
+  "segmentSecondGrouping": 4,
+  "helpers": {
+    "noDomainDocBlock": true,
+    "stub": {
+      "jwtType": "JwtAccess",
+      "requestType": "NodegenRequest"
+    },
+    "objectReduceByMapOptions": {
+      "allowNullish": false,
+      "keepKeys": false,
+      "throwErrorOnAlien": false,
+      "allowNullishKeys": false
+    }
+  }
+}

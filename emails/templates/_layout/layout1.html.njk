@@ -1,0 +1,234 @@
+<nunjuck-email-subject text="App Name | {% block subject %}{% endblock %}"></nunjuck-email-subject>
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+  <meta http-equiv="X-UA-Compatible" content="IE=edge"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  {% block css %}
+    <style type="text/css">
+      body {
+        Margin: 0;
+        padding: 0;
+        background-color: #f0f4f8;
+        font-size: 14px;
+        color: #000000;
+      }
+
+      table {
+        border-spacing: 0;
+      }
+
+      td {
+        padding: 0;
+        word-wrap: anywhere;
+      }
+
+      img {
+        border: 0;
+      }
+
+      a {
+        text-decoration: none;
+        color: #2196F3 !important;
+        padding: 0 12px;
+      }
+
+      a.button {
+        display: inline-block;
+        Margin-bottom: 18px;
+        padding: 12px 24px;
+        font-size: 18px;
+        background-color: #2196F3;
+        color: #ffffff !important;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+      }
+
+      .padding-none {
+        padding: 0px;
+      }
+
+      .pt-sm {
+        padding-top: 18px;
+      }
+
+      .pt-md {
+        padding-top: 28px;
+      }
+
+      .pb-md {
+        padding-bottom: 28px;
+      }
+
+      .mt-sm {
+        margin-top: 18px;
+      }
+
+      .mt-md {
+        Margin-top: 28px;
+      }
+
+      .mb-md {
+        Margin-bottom: 28px;
+      }
+
+      .mb-lg {
+        Margin-bottom: 42px;
+      }
+
+      .sm-container {
+        max-width: 500px;
+      }
+
+      .md-container {
+        max-width: 600px;
+      }
+
+      .wrapper {
+        width: 100%;
+        table-layout: fixed;
+        padding-top: 35px;
+        padding-bottom: 35px;
+        background-color: #f0f4f8;
+      }
+
+      .webkit {
+        padding: 20px;
+        background-color: #ffffff;
+        border-radius: 4px;
+        box-shadow: 0 3px 6px rgba(0, 0, 0, 0.2);
+      }
+
+      .outer {
+        Margin: 0 auto;
+        width: 100%;
+        border-spacing: 0;
+        font-family: sans-serif;
+      }
+
+      .header a {
+        padding-left: 0;
+      }
+
+      .content {
+        font-size: 18px;
+      }
+
+      .text-center{
+        text-align: center;
+      }
+
+      .title {
+        font-size: 26px;
+        font-weight: 600 !important;
+      }
+
+      .highlight {
+        color: #2196F3;
+      }
+
+      .bold {
+        font-weight: bold;
+      }
+
+      .left {
+        display: inline-block;
+        width: 35%;
+      }
+
+      .right {
+        display: inline-block;
+        width: 64%;
+        text-align: right;
+      }
+
+      .text-center {
+        text-align: center;
+      }
+
+      @media only screen and (max-width: 820px) {
+        .content {
+          font-size: 14px !important;
+        }
+
+        .title {
+          font-size: 20px !important;
+        }
+
+        a.button {
+          padding: 8px 16px !important;
+          font-size: 14px !important;
+        }
+
+        .pt-sm {
+          padding-top: 8px !important;
+        }
+
+        .pt-md {
+          padding-top: 18px !important;
+        }
+
+        .pb-md {
+          padding-bottom: 18px !important;
+        }
+
+        .mt-sm {
+          Margin-top: 8px !important;
+        }
+
+        .mt-md {
+          Margin-top: 18px !important;
+        }
+
+        .mb-md {
+          Margin-bottom: 18px !important;
+        }
+
+        .mb-lg {
+          Margin-bottom: 32px !important;
+        }
+
+        .footer {
+          font-size: 12px !important;
+        }
+
+        .left,
+        .right {
+          width: 100% !important;
+          text-align: center !important;
+        }
+
+        .left {
+          padding-left: 0 !important;
+          padding-bottom: 10px !important;
+        }
+
+        .right a {
+          display: block !important;
+          padding: 5px 0 !important;
+        }
+      }
+
+      @media only screen and (max-width: 570px) {
+        .webkit {
+          padding: 15px !important;
+        }
+      }
+    </style>
+  {% endblock %}
+</head>
+<body>
+<center class="wrapper">
+  <div class="webkit sm-container">
+    <table class="outer sm-container" align="center" role="presentation">
+      {% include "./header/header.html.njk" %}
+      {% block message %}{% endblock %}
+    </table>
+  </div>
+</center>
+</body>
+</html>

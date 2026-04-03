@@ -1,0 +1,87 @@
+import express from 'express'
+
+{% if operationsPathsHasParamsToValidate(operations) %}import {celebrate} from 'celebrate'{% endif %}
+{% if pathMethodsHaveAttr(operations, 'security') %}import accessTokenMiddleware from '../middleware/accessTokenMiddleware'{% endif %}
+{% if pathMethodsHaveAttr(operations, 'x-cache') %}import apiCaching from '../middleware/apiCaching'{% endif %}
+{% if pathMethodsHaveAttr(operations, 'x-permission') %}import permissionMiddleware from '../middleware/permissionMiddleware'{% endif %}
+{% if pathMethodsHaveAttr(operations, 'x-async-validators') %}import asyncValidationMiddleware from '../middleware/asyncValidationMiddleware'{% endif %}
+import {{ _.camelCase(operation_name) }}Validators from'../validators/{{ prettifyRouteName(operation_name) }}Validators'
+import {{ucFirst(operation_name)}}Domain from '../../../domains/{{ucFirst(operation_name)}}Domain'
+import {{_.camelCase(operation_name)}}TransformOutputs from '../transformOutputs/{{operation_name}}TransformOutput'
+
+export default function() {
+  const router = Router();
+  {% for op in operations -%}
+    {% for method, path in op.path -%}
+      {% if isValidMethod(method)%}
+      /**
+       * Operation ID: {{ path.operationId }}
+       * {% if path.summary %}Summary: {{ path.summary }}{% endif %}
+       * {% if path.description %}Description: {{ path.description | trim }}{% endif %}
+       */
+      {% set securityNames = getSecurityNames(path, swagger) %}
+      router.{{method}}(
+        '{{op.subresource}}',
+        {%- if path['x-raw-body'] %}
+          /* x-raw-body on path found: Ensure body is raw */
+          express.raw({ type: '*/*' }),
+        {% else -%}
+          /* x-raw-body on path not found: Format the body */
+          express.json({ limit: '50mb' }),
+          {%- if securityNames %}
+            /* security on path found: Validate request security tokens */
+            accessTokenMiddleware(
+              {{ securityNames }},
+              {%- if path['x-passThruWithoutJWT'] %}
+                /* x-passThruWithoutJWT found on path: Inject bool true */
+                {passThruWithoutJWT: true}
+              {% endif -%}
+            ),
+          {% endif -%}
+          {%- if path['x-permission'] %}
+            /* x-permission on path found: Check permission of the incoming user */
+            permissionMiddleware('{{ path['x-permission'] }}'),
+          {% endif -%}
+          {%- if pathsHasParamsToValidate(path) %}
+            /* Validate the request data and return validation errors */
+            celebrate(
+              {{ _.camelCase(operation_name) }}Validators.{{path.operationId}},
+              {%- if path['x-joi-options'] %}
+                /* x-joi-options found on path: inject into celebrate */
+                {{ path['x-joi-options'] | dump }}
+              {% endif -%}
+            ),
+          {% endif -%}
+          {%- if path['x-async-validators'] %}
+            /* x-async-validators on path found: Call an async validator function and throw an appropriate error */
+            asyncValidationMiddleware({{ path['x-async-validators'] | dump }}),
+          {% endif -%}
+          {%- if path['x-cache'] %}
+            /* x-cache found on path: call the api cache middleware */
+            apiCaching({{_.camelCase(operation_name)}}TransformOutputs.{{path.operationId}}),
+          {% endif -%}
+        {% endif -%}
+        async (req: any, res: GenerateItExpressResponse) => {
+          {% if not path['x-passResponse'] -%}res.inferResponseType( {% endif %}
+            {% if path['x-worker'] -%}
+            await WorkerService.handleRequestWithWorker(req, '{{ucFirst(operation_name)}}Domain', '{{path.operationId}}', [{{pathParamsToDomainParams(method, path, false, true, 'params')}}]),
+            {% else -%}
+            await {{ucFirst(operation_name)}}Domain.{{path.operationId}}({{pathParamsToDomainParams(method, path, false, true, 'params')}}){% if not path['x-passResponse'] -%},{% endif %}
+            {% endif -%}
+          {% if not path['x-passResponse'] -%}
+            {% set responseCode = getSingleSuccessResponse(path.responses) or 200 -%}{{ responseCode }},
+            {% if path.produces -%}
+              '{{ path.produces }}'
+            {% elif path.responses[responseCode].content -%}
+              {% set responseKeys = _.keys(path.responses[responseCode].content).join(',') -%}'{{ responseKeys }}'
+            {% else %}undefined{% endif -%},
+            {{_.camelCase(operation_name)}}TransformOutputs.{{path.operationId}}
+          ){% endif %}
+        }
+      );
+      {% endif %}
+    {%- endfor %}
+  {%- endfor %}
+
+  return router
+}

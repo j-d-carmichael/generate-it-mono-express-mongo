@@ -1,0 +1,63 @@
+{
+  "releases": [
+    {
+      "templateVersion": "2.0.0",
+      "minCoreVersion": "5.20.0",
+      "description": "The http layer is now fully managed with custom middleware injectable, additionally all output content-type is now inferred.",
+      "changes": [
+        "[manual change required] nodegenDir in the .nodegenrc file now has value 'src/http'",
+        "[manual change required] app.ts now only calls @/src/http, see the latest src/app.ts in github for how it should now look",
+        "[manual change required] server.ts now must call the http.start() function returned, see the latest server.ts in github for how it should now look"
+      ]
+    },
+    {
+      "templateVersion": "2.0.1",
+      "minCoreVersion": "5.20.0",
+      "description": "Giving the express app back to the developer in app.ts",
+      "changes": [
+        "[feat] The express app is returned in the http module"
+      ]
+    },
+    {
+      "templateVersion": "2.0.2",
+      "minCoreVersion": "5.20.0",
+      "description": "Fixes domainsImporter for grouped domain URLs",
+      "changes": [
+        "[fix] src/http/nodegen/request-worker/domainsImporter.ts.njk iterates the new groupNamesWithFirstUrlSegment opposed to the old endpoints"
+      ]
+    },
+    {
+      "templateVersion": "2.1.0",
+      "minCoreVersion": "5.20.0",
+      "description": "The src/http/index > start now returns a promise",
+      "changes": [
+        "[manual change required] Ensure you handle the promise returned from http.start() in the server.ts"
+      ]
+    },
+    {
+      "templateVersion": "2.2.0",
+      "minCoreVersion": "5.22.0",
+      "description": "Path middleware used updated in the domain middleware & if x-passResponse the domain should handle the response",
+      "changes": [
+        "[docs] path middleware used updated in the domain middleware"
+      ]
+    },
+    {
+      "templateVersion": "2.3.0",
+      "minCoreVersion": "5.22.0",
+      "description": "Inject express app to http(port, { app }) allowing server side rendered content from nunjucks",
+      "changes": [
+        "[feat] Inject express app to http(port, { app }) allowing server side rendered content from nunjucks"
+      ]
+    },
+    {
+      "templateVersion": "2.4.0",
+      "minCoreVersion": "5.25.4",
+      "description": "Auto gen tests, requires the latest generate-it core",
+      "changes": [
+        "[feat] Generate tests automatically (opt-in). See https://acrontum.github.io/generate-it/#/_pages/templates?id=nodegenrc.",
+        "[fix] Edge case with odd path names causing inconsistent naming patterns"
+      ]
+    }
+  ]
+}

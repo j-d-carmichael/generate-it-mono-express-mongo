@@ -1,0 +1,20 @@
+import config from '@/config';
+import express from 'express';
+{%- for groupName, firstUrlSegment in groupNamesWithFirstUrlSegment %}
+import {{_.camelCase(groupName)}}Routes from './routes/{{_.camelCase(groupName)}}Routes';
+{%- endfor %}
+
+export interface RoutesImporter {
+  basePath?: string
+}
+
+export const baseUrl = '{{swagger.basePath}}';
+
+export default function (app: express.Application, options: RoutesImporter = {basePath: baseUrl}) {
+  const basePath = (options.basePath || '').replace(/\/+$/, '');
+
+  {% for groupName, firstUrlSegment in groupNamesWithFirstUrlSegment -%}
+  app.use(basePath + '/{{firstUrlSegment if firstUrlSegment != 'root' else ''}}', {{_.camelCase(groupName)}}Routes());
+
+  {% endfor -%}
+}
