@@ -2,7 +2,7 @@ import path from 'path';
 import fs from 'fs/promises';
 import fetchPermissionsFromOpenapiFile from '@/http/nodegen/utils/fetchPermissionsFromOpenapiFile';
 import PermissionRepository from '@/database/PermissionRepository';
-import { DEFAULT_PERMISSIONS } from '@/constants/DEFAULT_PERMISSIONS';
+import { DEFAULT_PERMISSIONS } from '@/constants/PERMISSIONS_GROUP_MAPPING';
 
 // PermissionDefinition interface is defined in DEFAULT_PERMISSIONS
 
