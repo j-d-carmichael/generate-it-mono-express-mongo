@@ -1,5 +1,6 @@
 import config from '@/config';
 import express from 'express';
+import authRoutes from '@/services/AuthRoutesService';
 {%- for groupName, firstUrlSegment in groupNamesWithFirstUrlSegment %}
 import {{_.camelCase(groupName)}}Routes from './routes/{{_.camelCase(groupName)}}Routes';
 {%- endfor %}
@@ -12,6 +13,9 @@ export const baseUrl = '{{swagger.basePath}}';
 
 export default function (app: express.Application, options: RoutesImporter = {basePath: baseUrl}) {
   const basePath = (options.basePath || '').replace(/\/+$/, '');
+
+  // WorkOS AuthKit routes (login, callback, logout)
+  app.use(basePath + '/auth', authRoutes);
 
   {% for groupName, firstUrlSegment in groupNamesWithFirstUrlSegment -%}
   app.use(basePath + '/{{firstUrlSegment if firstUrlSegment != 'root' else ''}}', {{_.camelCase(groupName)}}Routes());

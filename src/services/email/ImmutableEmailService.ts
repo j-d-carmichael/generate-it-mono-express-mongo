@@ -1,11 +1,5 @@
 import Emailer from '@/services/email/Emailer';
 import config from '@/config';
-import UserRepository from '@/database/UserRepository';
-import CompanyRepository from '@/database/CompanyRepository';
-import CompanyMemberRepository from '@/database/CompanyMemberRepository';
-import { App, CompanyMember } from '@/http/nodegen/interfaces';
-import { CleanupReport } from '@/services/OrphanCleanupService';
-import { SYSTEM_SUPER_ADMIN } from '@/constants/ROLES';
 
 class ImmutableEmailService {
   /**

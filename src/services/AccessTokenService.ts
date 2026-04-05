@@ -1,15 +1,6 @@
 import express = require('express');
-import { IncomingHttpHeaders } from 'http';
-import jwt from 'jsonwebtoken';
-import _ from 'lodash';
-import config from '../config';
-import { UnauthorizedException } from '@/http/nodegen/errors';
 import NodegenRequest from '@/http/interfaces/NodegenRequest';
-
-interface JwtDetails {
-  maxAge: number;
-  sessionData: any;
-}
+import WorkOsService from '@/services/WorkOsService';
 
 export interface ValidateRequestOptions {
   passThruWithoutJWT: boolean;
@@ -21,141 +12,101 @@ class AccessTokenService {
    * @param res
    * @param e
    * @param msg
-   * @param headersProvidedString
    */
   private denyRequest(
     res: express.Response,
-    e = 'AccessTokenService did not match the given keys or tokens',
-    msg = 'Invalid auth token provided',
-    headersProvidedString = ''
+    e = 'AccessTokenService: authentication failed',
+    msg = 'Invalid or missing auth session',
   ): void {
     console.error(e);
     res.status(401).json({
       message: msg,
-      token: headersProvidedString,
     });
   }
 
   /**
-   * Simple function that assumes a prefix or bearer is a jwt else it is a simple api key
-   * @param headers
-   * @param headerNames
-   */
-  public extractAuthHeader(
-    headers: IncomingHttpHeaders,
-    headerNames: string[]
-  ): {
-    jwtToken: string | undefined;
-    apiKey: string | undefined;
-  } {
-    let jwtToken: string | undefined;
-    let apiKey: string | undefined;
-    for (let i = 0; i < headerNames.length; ++i) {
-      const tokenRaw = String(headers[headerNames[i].toLowerCase()] || headers[headerNames[i]] || '');
-      if (tokenRaw.length > 0) {
-        const tokenParts = tokenRaw.split('Bearer ');
-        if (tokenRaw.substring(0, 7) === 'Bearer ') {
-          jwtToken = tokenParts[1];
-          break;
-        } else {
-          // This is a token but not JWT thus API key
-          apiKey = tokenRaw;
-        }
-      }
-    }
-    return {
-      jwtToken,
-      apiKey,
-    };
-  }
-
-  /**
-   * Checks a JWT or API key differentiating between the two with the existence or not of Bearer.
-   * !! Extend this method as required.
-   * !! Note the src/http/nodegen/security/definitions.ts.njk contains all security definitions
+   * Validates the request using a WorkOS AuthKit sealed session cookie.
+   *
+   * If the session is valid the authenticated WorkOS User is attached to
+   * `req.workosUser` (and `req.jwtData` for backward compatibility).
+   *
+   * When the session has expired the method will attempt a transparent
+   * refresh and update the session cookie on the response.
+   *
+   * The `headerNames` parameter is kept for interface compatibility with
+   * the generated route template but is not used — authentication is
+   * cookie-based via the `wos-session` cookie set by the /auth/callback
+   * endpoint.
+   *
    * @param req
    * @param res
    * @param next
-   * @param headerNames
+   * @param headerNames  – retained for template compatibility
    * @param options
    */
-  public validateRequest(
+  public async validateRequest(
     req: NodegenRequest,
     res: express.Response,
     next: express.NextFunction,
     headerNames: string[],
     options?: ValidateRequestOptions
-  ): void {
-    const { jwtToken, apiKey } = this.extractAuthHeader(req.headers, headerNames);
-    if (!jwtToken && !apiKey) {
-      if (options && options.passThruWithoutJWT) {
+  ): Promise<void> {
+    const sessionData = req.cookies?.['wos-session'];
+
+    if (!sessionData) {
+      if (options?.passThruWithoutJWT) {
         return next();
       }
-      return this.denyRequest(res, 'No token to parse', 'No auth token provided.', JSON.stringify(req.headers));
-    }
-    if (jwtToken) {
-      // verify the JWT token
-      this.verifyJWT(jwtToken)
-        .then((decodedToken: any) => {
-          req.jwtData = decodedToken;
-          req.originalToken = jwtToken;
-          next();
-        })
-        .catch(() => {
-          this.denyRequest(res);
-        });
-    } else if (config.apiKey === apiKey) {
-      // verify the access token
-      next();
-    } else {
-      this.denyRequest(res);
-    }
-  }
-
-  /**
-   * Generates a JTW token
-   * @param details
-   */
-  public generateJWToken(details: JwtDetails) {
-    if (typeof details.maxAge !== 'number') {
-      details.maxAge = 3600;
+      return this.denyRequest(res, 'No WorkOS session cookie found', 'No auth session provided.');
     }
 
-    details.sessionData = _.reduce(
-      details.sessionData || {},
-      (memo: any, val: any, key: string) => {
-        if (typeof val !== 'function' && key !== 'password') {
-          memo[key] = val;
-        }
-        return memo;
-      },
-      {}
-    );
-    return jwt.sign(
-      {
-        data: details.sessionData,
-      },
-      config.jwtAccessSecret,
-      {
-        algorithm: 'HS256',
-        expiresIn: details.maxAge,
+    try {
+      const session = WorkOsService.loadSealedSession(sessionData);
+
+      const authResult = await session.authenticate();
+
+      if (authResult.authenticated) {
+        req.workosUser = authResult.user;
+        req.jwtData = authResult.user;
+        req.originalToken = sessionData;
+        return next();
       }
-    );
-  }
 
-  /**
-   * Verify a JWT and return its payload
-   * @param token
-   */
-  public verifyJWT(token: string): Promise<any> {
-    return new Promise((resolve) => {
-      jwt.verify(token, config.jwtAccessSecret, (err: any, data: any) => {
-        if (err) {
-          throw new UnauthorizedException();
+      // Session exists but is not valid — attempt a refresh
+      try {
+        const refreshResult = await session.refresh();
+
+        if (!refreshResult.authenticated) {
+          return this.denyRequest(res, `WorkOS session refresh failed: ${refreshResult.reason}`);
         }
-        return resolve(data.data);
-      });
-    });
+
+        // Update the cookie with the refreshed session
+        res.cookie('wos-session', refreshResult.sealedSession, {
+          path: '/',
+          httpOnly: true,
+          secure: true,
+          sameSite: 'lax',
+        });
+
+        // Re-load the refreshed session to get the user
+        const refreshedSession = WorkOsService.loadSealedSession(refreshResult.sealedSession);
+        const refreshedAuth = await refreshedSession.authenticate();
+
+        if (refreshedAuth.authenticated) {
+          req.workosUser = refreshedAuth.user;
+          req.jwtData = refreshedAuth.user;
+          req.originalToken = refreshResult.sealedSession;
+          return next();
+        }
+
+        return this.denyRequest(res, 'WorkOS session invalid after refresh');
+      } catch (refreshError) {
+        res.clearCookie('wos-session');
+        return this.denyRequest(res, String(refreshError), 'Session expired. Please sign in again.');
+      }
+    } catch (error) {
+      return this.denyRequest(res, String(error), 'Authentication failed.');
+    }
   }
 }
 

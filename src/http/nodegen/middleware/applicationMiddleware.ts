@@ -6,6 +6,7 @@ import {
   headersCaching,
   inferResponseType,
 } from '@/http/nodegen/middleware';
+import cookieParser from 'cookie-parser';
 import express from 'express';
 import expressFormData from 'express-form-data';
 import morgan from 'morgan';
@@ -27,6 +28,9 @@ export const responseHeaders = (app: express.Application): void => {
 };
 
 export const requestParser = (app: express.Application): void => {
+  // parse cookies (required for WorkOS AuthKit sealed sessions)
+  app.use(cookieParser());
+
   // parse data with connect-multiparty
   app.use(
     expressFormData.parse({

@@ -10,7 +10,7 @@ class PermissionService {
      * If the swagger path contains x-permission this middleware is used.
      * For example, assuming the object appRole was a key value object where each key was a
      * role name and each value was an array of permissions (eg from a redis db or similar) this could be a solution:
-     * if(appRole[req.jwtData.role].contains(permission)) {
+     * if(appRole[req.workosUser.id].contains(permission)) {
      *   next();
      * }
      * throw new ForbiddenException('Your user does not have permission to do that');

@@ -11,5 +11,7 @@ export default async (port: number): Promise<Http> => {
 
   // Return the http layer, to inject custom middleware pass the HttpOptions
   // argument. See the @/http/index.ts
-  return http(port);
+  return http(port, {
+    
+  });
 };

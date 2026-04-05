@@ -1,5 +1,14 @@
 type BraceIndices = [number, number] | null;
 
+/**
+ * Extracts JSON objects from a string by finding matching braces.
+ * Typically used in conjunction with AI output, though AI models are good, they don't return pure JSON 100% of the time.
+ * This function helps extract the JSON from the output when the JSON might be padded in other text.
+ *
+ * @param str - The string to extract JSON from
+ * @param getOnly1st - If true, returns only the first found object, otherwise returns an array of all found objects
+ * @returns The first found object or an array of all found objects
+ */
 export const jsonExtractor = (str: string, getOnly1st = false): any[] | any => {
   let currIndex = 0;
   const objs: object[] = [];

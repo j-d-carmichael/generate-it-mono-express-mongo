@@ -36,10 +36,6 @@ class UserRepository extends BaseRepository<UserClass> {
     return this.model.findOne({ externalId });
   }
 
-  findByCompanyId(companyId: string) {
-    return this.model.find({ companyId }).sort({ createdAt: -1 });
-  }
-
   findAll() {
     return this.model.find().sort({ createdAt: -1 });
   }

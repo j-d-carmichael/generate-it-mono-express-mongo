@@ -7,6 +7,6 @@ export default (headerNames: string[], options?: ValidateRequestOptions) => {
     /**
      * The validate request should call the next function on successful token validation
      */
-    AccessTokenService.validateRequest(req, res, next, headerNames, options);
+    AccessTokenService.validateRequest(req, res, next, headerNames, options).catch(next);
   };
 }
