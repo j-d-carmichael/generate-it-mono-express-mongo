@@ -1,4 +1,4 @@
-import express = require('express');
+import express from 'express';
 import NodegenRequest from '@/http/interfaces/NodegenRequest';
 import WorkOsService from '@/services/WorkOsService';
 
@@ -80,8 +80,13 @@ class AccessTokenService {
           return this.denyRequest(res, `WorkOS session refresh failed: ${refreshResult.reason}`);
         }
 
+        const { sealedSession } = refreshResult;
+        if (!sealedSession) {
+          return this.denyRequest(res, 'WorkOS refresh returned no sealed session');
+        }
+
         // Update the cookie with the refreshed session
-        res.cookie('wos-session', refreshResult.sealedSession, {
+        res.cookie('wos-session', sealedSession, {
           path: '/',
           httpOnly: true,
           secure: true,
@@ -89,13 +94,13 @@ class AccessTokenService {
         });
 
         // Re-load the refreshed session to get the user
-        const refreshedSession = WorkOsService.loadSealedSession(refreshResult.sealedSession);
+        const refreshedSession = WorkOsService.loadSealedSession(sealedSession);
         const refreshedAuth = await refreshedSession.authenticate();
 
         if (refreshedAuth.authenticated) {
           req.workosUser = refreshedAuth.user;
           req.jwtData = refreshedAuth.user;
-          req.originalToken = refreshResult.sealedSession;
+          req.originalToken = sealedSession;
           return next();
         }
 
