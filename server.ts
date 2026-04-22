@@ -5,7 +5,7 @@ import app from '@/app';
 import appCli from '@/app.cli';
 import run from '@/cli/run';
 import config from '@/config';
-import 'generate-it-logger';
+import '@/http/nodegen/utils/logger';
 
 const cliInput = appCli();
 const PORT = cliInput.port || config.port;
