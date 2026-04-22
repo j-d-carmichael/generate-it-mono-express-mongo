@@ -8,9 +8,11 @@ import express from 'express'
 import {{ _.camelCase(operation_name) }}Validators from'../validators/{{ prettifyRouteName(operation_name) }}Validators'
 import {{ucFirst(operation_name)}}Domain from '../../../domains/{{ucFirst(operation_name)}}Domain'
 import {{_.camelCase(operation_name)}}TransformOutputs from '../transformOutputs/{{operation_name}}TransformOutput'
+import GenerateItExpressResponse from '@/http/nodegen/interfaces/GenerateItExpressResponse';
 
 export default function() {
-  const router = Router();
+  const router = express.Router();
+
   {% for op in operations -%}
     {% for method, path in op.path -%}
       {% if isValidMethod(method)%}
