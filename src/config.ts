@@ -15,6 +15,8 @@ export default {
   env: ProcEnvHelper.getOrSetDefault('NODE_ENV', 'production'),
   port: ProcEnvHelper.getOrSetDefault('PORT', 8080),
 
+  corsWhiteList: ProcEnvHelper.getOrSetDefault('CORS_WHITELIST', '*'),
+
   appDetails: {
     name: 'Your app',
     frontend: {

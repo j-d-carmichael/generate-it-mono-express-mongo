@@ -8,6 +8,8 @@ declare global {
       originalToken: string;
       clientIp?: string;
 
+      defaultContentType?: string;
+
       // WorkOS AuthKit authenticated user
       workosUser?: User;
     }

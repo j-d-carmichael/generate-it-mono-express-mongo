@@ -1,10 +1,10 @@
 import path from 'path';
-import fs from 'fs-extra';
+import fs from 'fs';
 import { inspect } from 'util';
 import config from '../../../config';
 
 const packageJsonPath = path.join(process.cwd(), 'package.json');
-const packageObj = fs.readJsonSync(packageJsonPath);
+const packageObj = JSON.parse(fs.readFileSync(packageJsonPath, 'utf-8'));
 
 // Log levels in order of priority (lower number = higher priority)
 enum LogLevel {
