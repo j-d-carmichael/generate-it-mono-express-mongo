@@ -1,5 +1,6 @@
 import { WorkOS } from '@workos-inc/node';
 import config from '../config';
+import { UnauthorizedException } from '@/http/nodegen/errors';
 
 const workos = new WorkOS(config.workos.apiKey, {
   clientId: config.workos.clientId,
@@ -15,7 +16,7 @@ class WorkOsService {
    * Returns the WorkOS AuthKit authorization URL for the hosted sign-in page.
    * Register the redirectUri as a "Redirect URI" in the WorkOS Dashboard.
    */
-  public getAuthorizationUrl(): string {
+  public getAuthorizationUrl (): string {
     return workos.userManagement.getAuthorizationUrl({
       provider: 'authkit',
       redirectUri: config.workos.redirectUri,
@@ -27,7 +28,7 @@ class WorkOsService {
    * Exchanges an authorization code for a sealed session string.
    * @param code  The authorization code returned by WorkOS after authentication.
    */
-  public async authenticateWithCode(code: string): Promise<string> {
+  public async authenticateWithCode (code: string): Promise<string> {
     const { sealedSession } = await workos.userManagement.authenticateWithCode({
       clientId: config.workos.clientId,
       code,
@@ -37,14 +38,18 @@ class WorkOsService {
       },
     });
 
-    return sealedSession;
+    if (sealedSession) {
+      return sealedSession;
+    }
+
+    throw new UnauthorizedException();
   }
 
   /**
    * Loads a sealed session and returns the logout URL.
    * @param sessionData  The sealed session string from the `wos-session` cookie.
    */
-  public async getLogoutUrl(sessionData: string): Promise<string> {
+  public async getLogoutUrl (sessionData: string): Promise<string> {
     const session = workos.userManagement.loadSealedSession({
       sessionData,
       cookiePassword: config.workos.cookiePassword,
@@ -57,7 +62,7 @@ class WorkOsService {
    * Loads a sealed session and returns the authentication result.
    * @param sessionData  The sealed session string from the `wos-session` cookie.
    */
-  public loadSealedSession(sessionData: string) {
+  public loadSealedSession (sessionData: string) {
     return workos.userManagement.loadSealedSession({
       sessionData,
       cookiePassword: config.workos.cookiePassword,
