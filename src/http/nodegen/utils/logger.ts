@@ -1,5 +1,3 @@
-import clc from 'cli-color';
-
 import path from 'path';
 import fs from 'fs-extra';
 import { inspect } from 'util';
@@ -65,16 +63,14 @@ function logger (logItems: any[], level: string, logLevel: LogLevel) {
   const rest = logItems.map((data) => formatMessageToPrint(data)).join(' ');
 
   // Color coding for different levels
-  let coloredLevel = level;
-  if (level === 'ERROR') {
-    coloredLevel = clc.red(level);
-  } else if (level === 'WARN') {
-    coloredLevel = clc.yellow(level);
-  } else if (level === 'DEBUG') {
-    coloredLevel = clc.cyan(level);
-  } else if (level === 'VERBOSE') {
-    coloredLevel = clc.magenta(level);
-  }
+  const colors: Record<string, string> = {
+    ERROR: '\x1b[31m',
+    WARN: '\x1b[33m',
+    DEBUG: '\x1b[36m',
+    VERBOSE: '\x1b[35m',
+  };
+  const reset = '\x1b[0m';
+  const coloredLevel = colors[level] ? `${colors[level]}${level}${reset}` : level;
 
   const output = `[${packageObj.name}] ${new Date().toISOString()} ${coloredLevel}: ${msg}${rest ? ' - ' + rest : ''}`;
 
